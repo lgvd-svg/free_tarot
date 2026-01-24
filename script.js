@@ -233,14 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const context = document.getElementById('user-context').value;
         const output = document.getElementById('prompt-output');
 
-        let prompt = `CONSULTA DE TAROT\n\n`;
-        prompt += `Cartas seleccionadas:\n`;
-
-        selectedCards.forEach((item, index) => {
-            const pos = item.isReversed ? "Reversa" : "Normal";
-            prompt += `${index + 1}. ${item.cardData.name_es} - Posición: ${pos}\n`;
-        });
-
         const modeDescriptions = {
             1: "lectura del día",
             3: "presente pasado y futuro",
@@ -248,12 +240,22 @@ document.addEventListener('DOMContentLoaded', () => {
             13: "rueda astrológica"
         };
         const description = modeDescriptions[currentMode] || "";
-        prompt += `\nTipo de lectura: ${currentMode} cartas ${description ? `(${description})` : ''}\n`;
+
+        let prompt = `CONSULTA DE TAROT\n\n`;
+        prompt += `Tipo de lectura: ${currentMode} cartas ${description ? `(${description})` : ''}\n`;
+
         if (context.trim()) {
             prompt += `Contexto de la consulta: ${context}\n`;
         } else {
             prompt += `Contexto de la consulta: Sin contexto específico.\n`;
         }
+
+        prompt += `\nCartas seleccionadas en el orden de la lectura:\n`;
+
+        selectedCards.forEach((item, index) => {
+            const pos = item.isReversed ? "Reversa" : "Normal";
+            prompt += `${index + 1}. ${item.cardData.name_es} - Posición: ${pos}\n`;
+        });
 
         prompt += `\n
         Eres un tarotista increíblemente experto en interpretación simbólica y hermetismo.
