@@ -252,9 +252,53 @@ document.addEventListener('DOMContentLoaded', () => {
 
         prompt += `\nCartas seleccionadas en el orden de la lectura:\n`;
 
+        // Definiciones de posiciones para cada tirada
+        const spreadPositions = {
+            1: ["Carta del día / Situación actual"],
+            3: ["Pasado", "Presente", "Futuro"],
+            10: [
+                "1. Situación presente",
+                "2. El Desafío (cruzada)",
+                "3. El Pasado / Base",
+                "4. El Pasado Reciente",
+                "5. El Mejor Resultado Posible / Metas",
+                "6. El Futuro Inmediato",
+                "7. Factores Internos / Actitud del consultante",
+                "8. Factores Externos / Influencias ambientales",
+                "9. Esperanzas y Temores",
+                "10. Resultado Final"
+            ],
+            13: [
+                "1. Casa 1 (Identidad / Personalidad)",
+                "2. Casa 2 (Recursos / Valores)",
+                "3. Casa 3 (Comunicación / Entorno cercano)",
+                "4. Casa 4 (Hogar / Raíces)",
+                "5. Casa 5 (Creatividad / Placer)",
+                "6. Casa 6 (Salud / Trabajo diario)",
+                "7. Casa 7 (Relaciones / Asociaciones)",
+                "8. Casa 8 (Transformación / Bienes compartidos)",
+                "9. Casa 9 (Filosofía / Viajes / Expansión)",
+                "10. Casa 10 (Carrera / Proyección social)",
+                "11. Casa 11 (Amigos / Proyectos grupales)",
+                "12. Casa 12 (Inconsciente / Karma)",
+                "13. Centro (Tema Central / Síntesis)"
+            ]
+        };
+
+        const currentPositions = spreadPositions[currentMode] || [];
+
         selectedCards.forEach((item, index) => {
             const pos = item.isReversed ? "Reversa" : "Normal";
-            prompt += `${index + 1}. ${item.cardData.name_es} - Posición: ${pos}\n`;
+            let positionDesc = "";
+
+            if (currentPositions.length > index) {
+                positionDesc = ` - ${currentPositions[index]}`;
+            } else if (currentPositions.length > 0) {
+                // Fallback if somehow more cards than positions (shouldn't happen with correct mode)
+                positionDesc = ` - Posición ${index + 1}`;
+            }
+
+            prompt += `${index + 1}. ${item.cardData.name_es} (${pos})${positionDesc}\n`;
         });
 
         prompt += `\n
