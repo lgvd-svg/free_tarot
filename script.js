@@ -310,10 +310,10 @@ document.addEventListener('DOMContentLoaded', () => {
             - Describe el significado tradicional de cada carta
             - Interpreta su posición y orientación en este contexto específico
             - Menciona qué aspectos de la vida representa cada carta
-        2. CONEXIONES Y SINERGIA ENTRE LAS CARTAS:
-            - Analiza cómo se relacionan las cartas entre sí
-            - Identifica patrones, contradicciones o refuerzos
-            - Señala secuencias narrativas o historias que cuentan juntas
+        2. CONEXIONES Y SINERGIA VISUAL:
+            - Analiza cómo se relacionan los símbolos visuales entre las cartas (colores, posturas, miradas)
+            - Identifica patrones gráficos comunes, contradicciones o refuerzos temáticos
+            - Construye una narrativa visual cohesiva entre las imágenes
         3. INTERPRETACIÓN PROFUNDA Y MENSAJES OCULTOS:
             - Extrae el mensaje principal del conjunto
             - Revela lecciones, advertencias u oportunidades no evidentes
@@ -322,9 +322,9 @@ document.addEventListener('DOMContentLoaded', () => {
             - Proporciona orientación específica y accionable
             - Sugiere áreas de enfoque o cambios recomendados
             - Ofrece perspectivas para superar obstáculos identificados
-        5. PALABRAS FINALES Y REFLEXIÓN:
-            - Resume la esencia de la lectura
-            - Proporciona una perspectiva integradora
+        5. CONCLUSIÓN Y MANTRA DE PODER:
+            - Resume la esencia de la lectura en una frase integradora
+            - Crea un MANTRA o AFIRMACIÓN personalizada (en primera persona) que sintetice la energía de la tirada para el consultante
             - Termina con una reflexión empoderadora
         TONO Y ESTILO:
             - Sé empático pero objetivo
