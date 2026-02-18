@@ -309,7 +309,23 @@ main {
 }
 
 #prompt-output {
-    height: 200px;
+    height: 100px;
+}
+
+.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    height: 0;
+    /* Optional: collapse space if needed, but be careful with layouts */
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#btn-generate,
+.prompt-output-container {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Responsive */

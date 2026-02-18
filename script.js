@@ -95,6 +95,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateStatus() {
         cardCountEl.textContent = `Seleccionadas: ${selectedCards.length} / ${currentMode}`;
+
+        // Show/Hide generate button based on completion
+        const btnGenerate = document.getElementById('btn-generate');
+        const outputContainer = document.querySelector('.prompt-output-container');
+
+        if (selectedCards.length === currentMode) {
+            btnGenerate.classList.remove('hidden');
+        } else {
+            btnGenerate.classList.add('hidden');
+            outputContainer.classList.add('hidden');
+        }
     }
 
     function fisherYatesShuffle(array) {
@@ -232,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const context = document.getElementById('user-context').value;
         const output = document.getElementById('prompt-output');
+        const outputContainer = document.querySelector('.prompt-output-container');
 
         const modeDescriptions = {
             1: "lectura del día",
@@ -335,13 +347,26 @@ document.addEventListener('DOMContentLoaded', () => {
             - Reconoce tanto las fortalezas como los desafíos`;
 
         output.value = prompt;
+        // Reveal the copy section
+        outputContainer.classList.remove('hidden');
     }
 
     function copyPrompt() {
         const output = document.getElementById('prompt-output');
+        const btnCopy = document.getElementById('btn-copy');
+
         output.select();
         document.execCommand('copy');
-        alert("Prompt copiado al portapapeles");
+
+        // Visual feedback
+        const originalText = btnCopy.textContent;
+        btnCopy.textContent = "¡Copiado!";
+        btnCopy.style.backgroundColor = "#27ae60";
+
+        setTimeout(() => {
+            btnCopy.textContent = originalText;
+            btnCopy.style.backgroundColor = "";
+        }, 2000);
     }
 
     // --- Modal ---
