@@ -15,73 +15,100 @@
 
 <body class="dark-theme">
     <div class="app-container">
-        <header>
-            <h1>Tarot Interactivo</h1>
-            <div class="controls-top">
-                <div class="mode-select">
-                    <button class="btn-mode active" data-mode="1">1 Carta</button>
-                    <button class="btn-mode" data-mode="3">3 Cartas</button>
-                    <button class="btn-mode" data-mode="10">10 Cartas</button>
-                    <button class="btn-mode" data-mode="13">13 Cartas</button>
-                </div>
-                <div class="actions">
-                    <button id="btn-shuffle" class="btn-action">Mezclar</button>
-                    <button id="btn-theme" class="btn-icon" title="Cambiar Tema">🌙</button>
-                </div>
-            </div>
-            <div class="status-bar">
-                <span id="card-count">Seleccionadas: 0 / 1</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggle-names" checked>
-                    <span class="slider"></span>
-                    <span class="label-text">Nombres</span>
-                </label>
-            </div>
-        </header>
-
-        <main>
-            <div class="tarot-grid" id="grid">
-                <!-- Cards will be injected here via JS -->
-            </div>
-        </main>
-
-        <section class="prompt-section">
-            <div class="prompt-header">
-                <h2>Generador de Prompt</h2>
-                <div class="prompt-actions">
-                    <button id="btn-random" class="btn-action">✨ Selección de Cartas Aleatoria</button>
-                    <button id="btn-generate" class="btn-primary hidden">Generar Prompt</button>
+        <!-- Pantalla inicial de selección -->
+        <div id="selection-screen" class="selection-overlay">
+            <div class="selection-content">
+                <h2>¿Qué lectura deseas realizar hoy?</h2>
+                <p class="selection-subtitle">Selecciona tu tirada y las cartas se revelarán automáticamente.</p>
+                <div class="mode-select-large">
+                    <button class="btn-mode-large" data-mode="1">
+                        <span class="mode-title">1 Carta</span>
+                        <span class="mode-desc">Lectura del Día</span>
+                    </button>
+                    <button class="btn-mode-large" data-mode="3">
+                        <span class="mode-title">3 Cartas</span>
+                        <span class="mode-desc">Pasado, Presente, Futuro</span>
+                    </button>
+                    <button class="btn-mode-large" data-mode="10">
+                        <span class="mode-title">10 Cartas</span>
+                        <span class="mode-desc">Cruz Celta</span>
+                    </button>
+                    <button class="btn-mode-large" data-mode="13">
+                        <span class="mode-title">13 Cartas</span>
+                        <span class="mode-desc">Rueda Astrológica</span>
+                    </button>
                 </div>
             </div>
-            <div class="prompt-inputs">
-                <textarea id="user-context" placeholder="Contexto de la consulta (opcional)..."></textarea>
-                <div class="prompt-output-container hidden">
-                    <textarea id="prompt-output" readonly placeholder="El prompt generado aparecerá aquí..."></textarea>
-                    <button id="btn-copy" class="btn-secondary">Copiar</button>
+        </div>
+
+        <div id="workspace" class="hidden">
+            <header>
+                <h1>Tarot Interactivo</h1>
+                <div class="controls-top">
+                    <!-- Botón para volver al inicio -->
+                    <button id="btn-restart" class="btn-primary">✨ Nueva Tirada</button>
+                    <div class="actions">
+                        <button id="btn-shuffle" class="btn-action">Mezclar</button>
+                        <button id="btn-theme" class="btn-icon" title="Cambiar Tema">🌙</button>
+                    </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- New Support/Donation Section -->
-        <section class="support-section">
-            <div class="support-content">
-                <h2>🔮 Apoya el Proyecto</h2>
-                <p>Este tarot interactivo es gratuito y de código abierto. Si te ha sido útil, considera invitarme un
-                    café simbólico para mantener la energía fluyendo.</p>
-
-                <div class="donation-options">
-                    <a href="https://buymeacoffee.com/luis.g.virues.d" target="_blank" class="btn-donate bmc"
-                        title="Enlace pendiente de configuración">
-                        🍺 Buy Me a Coffee
-                    </a>
+                <div class="status-bar">
+                    <span id="card-count">Seleccionadas: 0 / 1</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="toggle-names" checked>
+                        <span class="slider"></span>
+                        <span class="label-text">Nombres</span>
+                    </label>
                 </div>
+            </header>
 
-                <p class="transparency-note">
-                    <small>Todas las donaciones se gestionan a través de plataformas seguras (Ko-fi, Stripe, etc). No
-                        almacenamos datos bancarios.</small>
-                </p>
-            </div>
-        </section>
+            <main>
+                <div class="tarot-grid" id="grid">
+                    <!-- Cards will be injected here via JS -->
+                </div>
+            </main>
+
+            <section class="prompt-section">
+                <div class="prompt-header">
+                    <h2>Generador de Prompt</h2>
+                    <div class="prompt-actions">
+                        <button id="btn-random" class="btn-action">✨ Selección de Cartas Aleatoria</button>
+                        <button id="btn-generate" class="btn-primary hidden">Generar Prompt</button>
+                    </div>
+                </div>
+                <div class="prompt-inputs">
+                    <textarea id="user-context" placeholder="Contexto de la consulta (opcional)..."></textarea>
+                    <div class="prompt-output-container hidden">
+                        <textarea id="prompt-output" readonly
+                            placeholder="El prompt generado aparecerá aquí..."></textarea>
+                        <button id="btn-copy" class="btn-secondary">Copiar</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New Support/Donation Section -->
+            <section class="support-section">
+                <div class="support-content">
+                    <h2>🔮 Apoya el Proyecto</h2>
+                    <p>Este tarot interactivo es gratuito y de código abierto. Si te ha sido útil, considera invitarme
+                        un
+                        café simbólico para mantener la energía fluyendo.</p>
+
+                    <div class="donation-options">
+                        <a href="https://buymeacoffee.com/luis.g.virues.d" target="_blank" class="btn-donate bmc"
+                            title="Apóyame en Buy Me a Coffee">
+                            🍺 Buy Me a Coffee
+                        </a>
+                    </div>
+
+                    <p class="transparency-note">
+                        <small>Todas las donaciones se gestionan a través de plataformas seguras (Ko-fi, Stripe, etc).
+                            No
+                            almacenamos datos bancarios.</small>
+                    </p>
+                </div>
+            </section>
+        </div>
     </div>
 
     <!-- Modal for Card Details -->

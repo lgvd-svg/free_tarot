@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Elements ---
     const gridEl = document.getElementById('grid');
     const btnShuffle = document.getElementById('btn-shuffle');
-    const modeButtons = document.querySelectorAll('.btn-mode');
     const cardCountEl = document.getElementById('card-count');
     const toggleNamesEl = document.getElementById('toggle-names');
     const btnTheme = document.getElementById('btn-theme');
@@ -20,13 +19,28 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus();
 
         // Event Listeners
-        btnShuffle.addEventListener('click', shuffleDeck);
+        btnShuffle.addEventListener('click', () => {
+            shuffleDeck();
+        });
 
-        modeButtons.forEach(btn => {
+        const modeLargeButtons = document.querySelectorAll('.btn-mode-large');
+        modeLargeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
-                setMode(parseInt(e.target.dataset.mode));
+                startReading(parseInt(e.currentTarget.dataset.mode));
             });
         });
+
+        const btnRestart = document.getElementById('btn-restart');
+        if (btnRestart) {
+            btnRestart.addEventListener('click', () => {
+                document.getElementById('workspace').classList.add('hidden');
+                document.getElementById('selection-screen').classList.remove('hidden');
+                deselectAll();
+                document.querySelector('.prompt-output-container').classList.add('hidden');
+                document.getElementById('prompt-output').value = '';
+                document.getElementById('user-context').value = '';
+            });
+        }
 
         toggleNamesEl.addEventListener('change', (e) => {
             const names = document.querySelectorAll('.card-name');
@@ -81,16 +95,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function setMode(mode) {
+    function startReading(mode) {
         currentMode = mode;
-        // Reset selections when changing mode
         deselectAll();
-
-        // Update UI
-        modeButtons.forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`.btn-mode[data-mode="${mode}"]`).classList.add('active');
-
         updateStatus();
+
+        // Hide selection screen, show workspace
+        document.getElementById('selection-screen').classList.add('hidden');
+        document.getElementById('workspace').classList.remove('hidden');
+
+        // Just shuffle visually, do not auto-select
+        shuffleDeck();
     }
 
     function updateStatus() {
