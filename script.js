@@ -132,13 +132,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function shuffleDeck() {
-        // Shuffle the deck array
-        deck = fisherYatesShuffle([...TAROT_DATA]);
+        if (gridEl.classList.contains('shuffling')) return; // Prevent double shuffle
 
-        // Re-render grid with animation feel
-        // In a real DOM manipulation, re-rendering 78 divs is cheap enough
-        deselectAll();
-        renderGrid();
+        // Add shuffling class
+        gridEl.classList.add('shuffling');
+
+        // Optional: Add random offsets for the "gather" animation
+        const cards = gridEl.querySelectorAll('.card-container');
+        const centerX = gridEl.offsetWidth / 2;
+        const centerY = gridEl.offsetHeight / 2;
+
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const gridRect = gridEl.getBoundingClientRect();
+
+            // Calculate vector to center
+            const dx = (gridRect.left + centerX) - (rect.left + rect.width / 2);
+            const dy = (gridRect.top + centerY) - (rect.top + rect.height / 2);
+
+            card.style.setProperty('--move-x', `${dx}px`);
+            card.style.setProperty('--move-y', `${dy}px`);
+        });
+
+        // Delay the actual shuffle to show animation
+        setTimeout(() => {
+            // Shuffle the deck array
+            deck = fisherYatesShuffle([...TAROT_DATA]);
+
+            // Re-render grid
+            deselectAll();
+            renderGrid();
+
+            // Remove shuffling class
+            gridEl.classList.remove('shuffling');
+
+            // Reset custom properties
+            cards.forEach(card => {
+                card.style.removeProperty('--move-x');
+                card.style.removeProperty('--move-y');
+            });
+        }, 800); // Match CSS animation duration
     }
 
     function renderGrid() {
