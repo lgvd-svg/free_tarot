@@ -30,15 +30,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+        const btnContinue = document.getElementById('btn-continue');
+        if (btnContinue) {
+            btnContinue.addEventListener('click', () => {
+                document.getElementById('question-screen').classList.add('hidden');
+                document.getElementById('workspace').classList.remove('hidden');
+                document.getElementById('user-context').value = document.getElementById('pre-user-context').value;
+                shuffleDeck();
+            });
+        }
+
         const btnRestart = document.getElementById('btn-restart');
         if (btnRestart) {
             btnRestart.addEventListener('click', () => {
                 document.getElementById('workspace').classList.add('hidden');
+                document.getElementById('question-screen').classList.add('hidden');
                 document.getElementById('selection-screen').classList.remove('hidden');
                 deselectAll();
                 document.querySelector('.prompt-output-container').classList.add('hidden');
                 document.getElementById('prompt-output').value = '';
                 document.getElementById('user-context').value = '';
+                document.getElementById('pre-user-context').value = '';
             });
         }
 
@@ -100,12 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
         deselectAll();
         updateStatus();
 
-        // Hide selection screen, show workspace
+        // Hide selection screen, show question screen
         document.getElementById('selection-screen').classList.add('hidden');
-        document.getElementById('workspace').classList.remove('hidden');
-
-        // Just shuffle visually, do not auto-select
-        shuffleDeck();
+        document.getElementById('question-screen').classList.remove('hidden');
     }
 
     function updateStatus() {

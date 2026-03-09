@@ -364,6 +364,27 @@ main {
     margin-bottom: 30px;
 }
 
+.question-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 1.1em;
+    resize: vertical;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+.question-textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px rgba(157, 78, 221, 0.3);
+}
+
 .mode-select-large {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
