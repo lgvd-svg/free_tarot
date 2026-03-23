@@ -330,12 +330,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 "El Desafío (cruzada)",
                 "El Pasado / Base",
                 "El Pasado Reciente",
-                "El Mejor Resultado Posible / Metas",
+                "El potencial consiente / Metas",
                 "El Futuro Inmediato",
                 "Factores Internos / Actitud del consultante",
                 "Factores Externos / Influencias ambientales",
                 "Esperanzas y Temores",
-                "Resultado Final"
+                "Resultado Final / Desenlace"
             ],
             13: [
                 "Casa 1 (Identidad / Personalidad)",
