@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
         prompt += `\n
         Eres un tarotista increíblemente experto en interpretación simbólica y hermetismo.
         Tu estilo combina precisión técnica con lenguaje claro. No digas ni des ejemplos de lo que no es, sólo de lo que si es
-        dando ideas correctas y congruentes.
+        dando ideas correctas y congruentes. Un ejemplo de lo que debes evitar es: no es X, es Y.
         Realiza una lectura de tarot detallada con las cartas seleccionadas dadas 
         anteriormente respetando el orden y posición:
         1. ANÁLISIS INDIVIDUAL DE CADA CARTA:
