@@ -687,3 +687,214 @@ main {
     opacity: 0.7;
     margin-top: 10px;
 }
+
+/* --- Utilidad: ocultar por completo (display) --- */
+.is-hidden {
+    display: none !important;
+}
+
+/* --- Configuración de la API (llm7.io) --- */
+.api-config {
+    max-width: 800px;
+    margin: 20px auto 0;
+    padding: 0 20px;
+    text-align: right;
+}
+
+.api-panel {
+    margin-top: 12px;
+    padding: 18px;
+    text-align: left;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.api-panel > label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--gold);
+    font-family: var(--font-heading);
+}
+
+.api-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.api-row label {
+    color: var(--text-muted);
+    min-width: 70px;
+}
+
+.api-panel input,
+.api-panel select {
+    flex: 1;
+    min-width: 180px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    padding: 10px;
+    border-radius: 6px;
+    font-family: var(--font-body);
+}
+
+.api-status {
+    display: inline-block;
+    font-size: 0.85em;
+    min-height: 1.2em;
+    color: var(--text-muted);
+}
+
+.api-status.ok {
+    color: #27ae60;
+}
+
+.api-status.warn {
+    color: var(--gold-dim);
+}
+
+.api-note small {
+    display: block;
+    color: var(--text-muted);
+    opacity: 0.8;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+/* --- Interpretación del Oráculo --- */
+.oracle-section {
+    max-width: 800px;
+    margin: 0 auto 40px;
+    padding: 24px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.oracle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.oracle-header h2 {
+    margin: 0;
+    background: var(--gold-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.oracle-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    padding: 15px 0;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid var(--glass-border);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.oracle-output {
+    line-height: 1.7;
+    color: var(--text-color);
+}
+
+.oracle-output h2,
+.oracle-output h3,
+.oracle-output h4 {
+    font-family: var(--font-heading);
+    color: var(--accent-hover);
+    margin: 22px 0 10px;
+}
+
+.oracle-output ul {
+    padding-left: 22px;
+    margin: 10px 0;
+}
+
+.oracle-output li {
+    margin-bottom: 6px;
+}
+
+.oracle-output p {
+    margin: 10px 0;
+}
+
+.oracle-output strong {
+    color: var(--gold);
+}
+
+.oracle-error {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+/* --- Pantalla 3: Generador de Lectura --- */
+.selection-overlay.overlay-scroll {
+    align-items: flex-start;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+.reading-content {
+    max-width: 840px;
+    margin: 20px auto;
+    text-align: left;
+}
+
+.reading-content > h2,
+.reading-content > .selection-subtitle {
+    text-align: center;
+}
+
+.reading-content > .selection-subtitle {
+    margin-bottom: 32px;
+}
+
+.reading-content .api-config {
+    text-align: left;
+    padding: 0;
+    margin: 32px 0 0;
+}
+
+.reading-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.reading-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+}

@@ -3,6 +3,62 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentMode = 10; // Default to 10 cards
   let selectedCards = []; // Array of card objects {cardData, isReversed, element}
   let deck = [...TAROT_DATA]; // Copy of data
+  let lastReadingMessages = null; // { system, user } de la última tirada generada
+
+  // --- LLM (llm7.io) config ---
+  const LLM_API_URL = "https://api.llm7.io/v1/chat/completions";
+  const LLM_KEY_STORAGE = "llm7_api_key";
+  // Modelos gratuitos (usage_based_only:false) en llm7.io al 2026-08-04
+  const FREE_MODELS = [
+    "gpt-oss:20b",
+    "deepseek-v4-flash:0731",
+    "codestral-latest",
+    "minimax-2.7",
+    "mistral-Nemo-Instruct-2407",
+    "gemini-3.1-flash-lite",
+  ];
+
+  const TAROT_SYSTEM_PROMPT = `Eres un tarotista de renombre, experto en interpretación simbólica, hermetismo y en la baraja Rider-Waite-Smith. Combinas precisión técnica con un lenguaje claro, cálido y empático.
+
+Directrices de estilo:
+- Responde SIEMPRE en el idioma en el que se te formula la pregunta.
+- Afirma únicamente lo que la carta SÍ significa; nunca uses la fórmula "no es X, sino Y".
+- Sé empático pero objetivo, equilibrando realismo y esperanza.
+- Reconoce tanto las fortalezas como los desafíos; evita predicciones absolutas salvo que la tirada sea muy evidente.
+- Indica con claridad si la lectura resulta favorable, neutra o desfavorable para la pregunta.
+- Estructura tu respuesta en Markdown, con encabezados (##) para cada sección y listas cuando aporten claridad.`;
+
+  const READING_TASK = `Realiza una lectura de tarot detallada y completa usando EXCLUSIVAMENTE las cartas anteriores, respetando su orden, posición y orientación. Estructura tu respuesta en las siguientes secciones:
+
+## 1. Análisis individual de cada carta
+Para cada carta, en orden:
+- Explica su significado tradicional según su orientación (derecha o invertida).
+- Interpreta qué aporta en su posición específica dentro de esta tirada.
+- Relaciónala con el contexto de la consulta y el área de la vida que representa.
+- Apóyate en la descripción visual proporcionada (símbolos, colores, figuras) para enriquecer el significado.
+
+## 2. Conexiones y sinergia visual
+- Analiza cómo dialogan los símbolos visuales entre las cartas (colores, posturas, miradas, direcciones, elementos repetidos).
+- Identifica patrones, refuerzos o tensiones entre las imágenes.
+- Construye una narrativa visual coherente que hile toda la tirada.
+
+## 3. Interpretación profunda y mensajes ocultos
+- Extrae el mensaje central del conjunto.
+- Revela lecciones, advertencias u oportunidades no evidentes.
+- Contextualiza la lectura en términos de pasado, presente y futuro según la tirada.
+
+## 4. Consejos prácticos y camino a seguir
+- Ofrece orientación concreta y accionable.
+- Sugiere áreas de enfoque o cambios recomendados.
+- Propón cómo superar los obstáculos identificados.
+
+## 5. Conclusión y mantra de poder
+- Resume la esencia de la lectura en unas frases integradoras.
+- Señala con claridad si la tirada es favorable o desfavorable para la consulta.
+- Crea un MANTRA o AFIRMACIÓN personalizada, en primera persona, que sintetice la energía de la tirada.
+- Cierra con una reflexión empoderadora.
+
+Antes de finalizar, presenta un breve resumen claro de la lectura realizada.`;
 
   // --- DOM Elements ---
   const gridEl = document.getElementById("grid");
@@ -43,18 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const btnRestart = document.getElementById("btn-restart");
     if (btnRestart) {
-      btnRestart.addEventListener("click", () => {
-        document.getElementById("workspace").classList.add("hidden");
-        document.getElementById("question-screen").classList.add("hidden");
-        document.getElementById("selection-screen").classList.remove("hidden");
-        deselectAll();
-        document
-          .querySelector(".prompt-output-container")
-          .classList.add("hidden");
-        document.getElementById("prompt-output").value = "";
-        document.getElementById("user-context").value = "";
-        document.getElementById("pre-user-context").value = "";
-      });
+      btnRestart.addEventListener("click", restartAll);
     }
 
     toggleNamesEl.addEventListener("change", (e) => {
@@ -73,8 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // Prompt Logic
+    document.getElementById("btn-generate").addEventListener("click", () => {
+      generatePrompt();
+      showReadingScreen();
+    });
     document
-      .getElementById("btn-generate")
+      .getElementById("btn-generate-again")
       .addEventListener("click", generatePrompt);
     document.getElementById("btn-copy").addEventListener("click", copyPrompt);
 
@@ -82,6 +131,23 @@ document.addEventListener("DOMContentLoaded", () => {
     document
       .getElementById("btn-random")
       .addEventListener("click", selectRandomCards);
+
+    // Navegación de la pantalla de lectura
+    document
+      .getElementById("btn-back-cards")
+      .addEventListener("click", showCards);
+    document
+      .getElementById("btn-restart-reading")
+      .addEventListener("click", restartAll);
+
+    // API config y consulta al oráculo
+    initApiConfig();
+    document
+      .getElementById("btn-consult")
+      .addEventListener("click", consultOracle);
+    document
+      .getElementById("btn-copy-reading")
+      .addEventListener("click", copyReading);
   }
 
   // --- Core Logic ---
@@ -93,15 +159,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const allCards = Array.from(document.getElementById("grid").children);
     const needed = currentMode;
 
-    // Fisher-Yates shuffle logic on indices to pick unique random cards
-    // We act on indices [0...length-1]
-    const indices = Array.from({ length: allCards.length }, (_, i) => i);
-
-    // Shuffle indices
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
+    // Barajar índices y tomar los primeros 'needed' como selección única
+    const indices = fisherYatesShuffle(
+      Array.from({ length: allCards.length }, (_, i) => i),
+    );
 
     // Take the first 'needed' indices
     const selectedIndices = indices.slice(0, needed);
@@ -138,13 +199,18 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       btnGenerate.classList.add("hidden");
       outputContainer.classList.add("hidden");
+      const btnConsult = document.getElementById("btn-consult");
+      if (btnConsult) btnConsult.classList.add("hidden");
     }
   }
 
-  function fisherYatesShuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+  // Baraja Fisher-Yates; 'passes' repite el barajado para imitar mezclar físicamente varias veces
+  function fisherYatesShuffle(array, passes = 1) {
+    for (let p = 0; p < passes; p++) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
     }
     return array;
   }
@@ -175,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Delay the actual shuffle to show animation
     setTimeout(() => {
       // Shuffle the deck array
-      deck = fisherYatesShuffle([...TAROT_DATA]);
+      deck = fisherYatesShuffle([...TAROT_DATA], 5);
 
       // Re-render grid
       deselectAll();
@@ -199,44 +265,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const cardContainer = document.createElement("div");
       cardContainer.className = "card-container";
 
-      // Randomize reversed status for visuals
-      // Let's decide: Is the card reversed *on the table* before picking?
-      // Yes, "Indicador visual de posición (normal/reversa)".
-
+      // Orientación aleatoria de la carta sobre la mesa (normal/reversa)
       const isReversed = Math.random() < 0.5;
 
       const card = document.createElement("div");
       card.className = `card ${isReversed ? "reversed" : ""}`;
 
-      // Front (Tarot Image) - In DOM terms this is the "Back" of the element if 3D flipped
-      // But visually, the user sees the "Back of the card" (pattern) initially?
-      // Wait, usually you pick from face down cards.
-      // "Selección por clic individual... Resaltado visual"
-      // "Representación visual: Imagen... Nombre... Indicador"
-      // If they are face down, you can't see the image.
-      // Assumption: Cards are Face Down (Pattern visible). Users pick them.
-      // After picking, or perhaps for "Generation", they are revealed?
-      // Re-reading: "Representación visual: Cada carta debe mostrar: Imagen... Nombre"
-      // This might mean they are Face Up?
-      // "Mezcla aleatoria... Asignación aleatoria de posición"
-      // If they are Face Up from the start, "1, 3, 10, 13" selection implies picking specific ones.
-      // Let's assume **Face Down** initially for a reading experience, revealing on specific UI action,
-      // OR Face Up if it's a study tool.
-      // Given "Botón Generar Prompt", usually you pick Blindly.
-      // BUT "Representación visual" requirement lists Image/Name.
-      // Let's go with: Cards are Face Down. Clicking Selects them.
-
-      // Refined Plan:
-      // Card has 3D flip.
-      // Default: Face Down.
-      // Click: Selects it (Highlight).
-      // "Generar Prompt" reveals them? Or do they flip on specific interaction?
-
-      // Also, seeing 78 cards is cool.
-
-      // Middle Ground: Cards are Face Down (Back Pattern).
-      // When selected, they flip Face Up to reveal what you got.
-
+      // Cartas boca abajo (dorso); se voltean al seleccionarlas
       card.innerHTML = `
                 <div class="card-face card-back"></div>
                 <div class="card-face card-front">
@@ -313,24 +348,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const output = document.getElementById("prompt-output");
     const outputContainer = document.querySelector(".prompt-output-container");
 
+    lastReadingMessages = buildReadingMessages(context);
+
+    output.value =
+      `[INSTRUCCIONES DEL SISTEMA]\n${lastReadingMessages.system}\n\n` +
+      `[MENSAJE DEL USUARIO]\n${lastReadingMessages.user}`;
+    outputContainer.classList.remove("hidden");
+
+    const consultBtn = document.getElementById("btn-consult");
+    if (consultBtn) consultBtn.classList.remove("hidden");
+  }
+
+  function buildReadingMessages(context) {
     const modeDescriptions = {
       1: "lectura del día",
-      3: "presente pasado y futuro",
+      3: "pasado, presente y futuro",
       10: "cruz celta",
       13: "rueda astrológica",
     };
     const description = modeDescriptions[currentMode] || "";
-
-    let prompt = `CONSULTA DE TAROT\n\n`;
-    prompt += `Tipo de lectura: ${currentMode} cartas ${description ? `(${description})` : ""}\n`;
-
-    if (context.trim()) {
-      prompt += `Contexto de la consulta: ${context}\n`;
-    } else {
-      prompt += `Contexto de la consulta: Sin contexto específico.\n`;
-    }
-
-    prompt += `\nCartas seleccionadas en el orden de la lectura:\n`;
 
     // Definiciones de posiciones para cada tirada
     const spreadPositions = {
@@ -364,80 +400,306 @@ document.addEventListener("DOMContentLoaded", () => {
         "Centro (Tema Central / Síntesis)",
       ],
     };
-
     const currentPositions = spreadPositions[currentMode] || [];
 
+    let user = `CONSULTA DE TAROT\n\n`;
+    user += `Tipo de lectura: ${currentMode} cartas${description ? ` (${description})` : ""}\n`;
+    user += context.trim()
+      ? `Contexto de la consulta: ${context.trim()}\n`
+      : `Contexto de la consulta: Sin contexto específico.\n`;
+
+    user += `\nCartas seleccionadas en el orden de la lectura:\n`;
+
     selectedCards.forEach((item, index) => {
-      const pos = item.isReversed ? "Reversa" : "Normal";
-      let positionDesc = "";
+      const orientation = item.isReversed
+        ? "Invertida (Reversa)"
+        : "Derecha (Normal)";
+      const keywords = item.isReversed
+        ? item.cardData.keywords_rev
+        : item.cardData.keywords_up;
+      const positionDesc =
+        currentPositions.length > index
+          ? currentPositions[index]
+          : `Posición ${index + 1}`;
 
-      if (currentPositions.length > index) {
-        positionDesc = ` - ${currentPositions[index]}`;
-      } else if (currentPositions.length > 0) {
-        // Fallback if somehow more cards than positions (shouldn't happen with correct mode)
-        positionDesc = ` - Posición ${index + 1}`;
+      user += `\n${index + 1}. ${item.cardData.name_es} (${item.cardData.name_en}) — ${orientation}\n`;
+      user += `   • Posición en la tirada: ${positionDesc}\n`;
+      user += `   • Palabras clave (${item.isReversed ? "invertida" : "derecha"}): ${keywords}\n`;
+      if (item.cardData.img_desc) {
+        user += `   • Imagen de la carta: ${item.cardData.img_desc}\n`;
       }
-
-      prompt += `${index + 1}. ${item.cardData.name_es} (${pos})${positionDesc}\n`;
     });
 
-    prompt += `\n
-        Eres un tarotista increíblemente experto en interpretación simbólica y hermetismo.
-        Tu estilo combina precisión técnica con lenguaje claro. No digas ni des ejemplos de lo que no es, sólo de lo que si es
-        dando ideas correctas y congruentes. Un ejemplo de lo que debes evitar es: no es X, es Y.
-        Realiza una lectura de tarot detallada con las cartas seleccionadas dadas
-        anteriormente respetando el orden y posición:
-        1. ANÁLISIS INDIVIDUAL DE CADA CARTA:
-            - Describe el significado tradicional de cada carta
-            - Interpreta su posición y orientación en este contexto específico
-            - Menciona qué aspectos de la vida representa cada carta
-        2. CONEXIONES Y SINERGIA VISUAL:
-            - Analiza cómo se relacionan los símbolos visuales entre las cartas (colores, posturas, miradas)
-            - Identifica patrones gráficos comunes, contradicciones o refuerzos temáticos
-            - Construye una narrativa visual cohesiva entre las imágenes
-        3. INTERPRETACIÓN PROFUNDA Y MENSAJES OCULTOS:
-            - Extrae el mensaje principal del conjunto
-            - Revela lecciones, advertencias u oportunidades no evidentes
-            - Contextualiza la lectura en términos de pasado, presente y futuro
-        4. CONSEJOS PRÁCTICOS Y CAMINO A SEGUIR:
-            - Proporciona orientación específica y accionable
-            - Sugiere áreas de enfoque o cambios recomendados
-            - Ofrece perspectivas para superar obstáculos identificados
-        5. CONCLUSIÓN Y MANTRA DE PODER:
-            - Resume la esencia de la lectura en una frases integradoras
-            - Crea un MANTRA o AFIRMACIÓN personalizada (en primera persona) que sintetice la energía de la tirada para el consultante
-            - Termina con una reflexión empoderadora
-        TONO Y ESTILO:
-            - Sé empático pero objetivo
-            - Mantén un equilibrio entre realismo y esperanza
-            - De acuerdo a la tirada, da énfasis en si la lectura es negativa o positiva para la pregunta realizada.
-            - Usa un lenguaje claro, directo y respetuoso
-            - Enfócate en el crecimiento y la comprensión, sólo si es muy evidente, da predicciones absolutas
-            - Reconoce tanto las fortalezas como los desafíos
-        Antes de finalizar, presenta un resumen claro de la lectura realizada`;
+    user += `\n${READING_TASK}`;
 
-    output.value = prompt;
-    // Reveal the copy section
-    outputContainer.classList.remove("hidden");
+    return { system: TAROT_SYSTEM_PROMPT, user };
   }
+
 
   function copyPrompt() {
     const output = document.getElementById("prompt-output");
-    const btnCopy = document.getElementById("btn-copy");
+    copyText(output.value, document.getElementById("btn-copy"));
+  }
 
-    output.select();
-    document.execCommand("copy");
+  function copyReading() {
+    const output = document.getElementById("oracle-output");
+    copyText(output.dataset.raw || output.textContent, this);
+  }
 
-    // Visual feedback
-    const originalText = btnCopy.textContent;
-    btnCopy.textContent = "¡Copiado!";
-    btnCopy.style.backgroundColor = "#27ae60";
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      // Fallback para navegadores sin Clipboard API o contextos no seguros
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
 
+    if (!btn) return;
+    const originalText = btn.textContent;
+    btn.textContent = "¡Copiado!";
+    btn.style.backgroundColor = "#27ae60";
     setTimeout(() => {
-      btnCopy.textContent = originalText;
-      btnCopy.style.backgroundColor = "";
+      btn.textContent = originalText;
+      btn.style.backgroundColor = "";
     }, 2000);
   }
+
+  // --- Configuración de la API (llm7.io) ---
+
+  function initApiConfig() {
+    const select = document.getElementById("model-select");
+    FREE_MODELS.forEach((model) => {
+      const opt = document.createElement("option");
+      opt.value = model;
+      opt.textContent = model;
+      select.appendChild(opt);
+    });
+
+    const savedModel = localStorage.getItem("llm7_model");
+    if (savedModel && FREE_MODELS.includes(savedModel)) {
+      select.value = savedModel;
+    }
+    select.addEventListener("change", () => {
+      localStorage.setItem("llm7_model", select.value);
+    });
+
+    const keyInput = document.getElementById("api-key-input");
+    const savedKey = localStorage.getItem(LLM_KEY_STORAGE);
+    if (savedKey) {
+      keyInput.value = savedKey;
+      setApiStatus("Clave guardada ✓", "ok");
+    }
+
+    document.getElementById("btn-api-toggle").addEventListener("click", () => {
+      document.getElementById("api-panel").classList.toggle("is-hidden");
+    });
+
+    document.getElementById("btn-save-key").addEventListener("click", () => {
+      const value = keyInput.value.trim();
+      if (!value) {
+        localStorage.removeItem(LLM_KEY_STORAGE);
+        setApiStatus("Clave eliminada.", "warn");
+        return;
+      }
+      localStorage.setItem(LLM_KEY_STORAGE, value);
+      setApiStatus("Clave guardada ✓", "ok");
+    });
+  }
+
+  function setApiStatus(message, kind) {
+    const el = document.getElementById("api-status");
+    el.textContent = message;
+    el.className = "api-status" + (kind ? ` ${kind}` : "");
+  }
+
+  function getApiKey() {
+    return localStorage.getItem(LLM_KEY_STORAGE) || "";
+  }
+
+  // --- Consulta al LLM ---
+
+  async function consultOracle() {
+    if (!lastReadingMessages) {
+      alert("Primero genera el prompt de la tirada.");
+      return;
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      setApiStatus("Introduce y guarda tu API key primero.", "warn");
+      document.getElementById("api-panel").classList.remove("is-hidden");
+      document.getElementById("api-key-input").focus();
+      return;
+    }
+
+    const model = document.getElementById("model-select").value;
+    const section = document.getElementById("oracle-section");
+    const loading = document.getElementById("oracle-loading");
+    const outputEl = document.getElementById("oracle-output");
+    const consultBtn = document.getElementById("btn-consult");
+
+    section.classList.remove("is-hidden");
+    loading.classList.remove("is-hidden");
+    outputEl.innerHTML = "";
+    consultBtn.disabled = true;
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    try {
+      const response = await fetch(LLM_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: lastReadingMessages.system },
+            { role: "user", content: lastReadingMessages.user },
+          ],
+          temperature: 0.8,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await describeHttpError(response));
+      }
+
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error("El modelo no devolvió ninguna interpretación.");
+      }
+
+      outputEl.dataset.raw = content;
+      outputEl.innerHTML = renderMarkdown(content);
+    } catch (err) {
+      outputEl.dataset.raw = "";
+      outputEl.innerHTML = `<p class="oracle-error">⚠️ ${escapeHtml(err.message)}</p>`;
+    } finally {
+      loading.classList.add("is-hidden");
+      consultBtn.disabled = false;
+    }
+  }
+
+  async function describeHttpError(response) {
+    let detail = "";
+    try {
+      const data = await response.json();
+      detail = data?.error?.message || data?.message || "";
+    } catch (e) {
+      /* respuesta sin cuerpo JSON */
+    }
+    if (response.status === 401)
+      return "API key inválida o no autorizada (401). Revisa tu clave.";
+    if (response.status === 429)
+      return "Límite de peticiones alcanzado (429). Espera un momento e inténtalo de nuevo.";
+    return `Error ${response.status}${detail ? `: ${detail}` : ""}`;
+  }
+
+  function resetOracle() {
+    lastReadingMessages = null;
+    const section = document.getElementById("oracle-section");
+    const outputEl = document.getElementById("oracle-output");
+    section.classList.add("is-hidden");
+    outputEl.innerHTML = "";
+    outputEl.dataset.raw = "";
+    document.getElementById("btn-consult").classList.add("hidden");
+  }
+
+  function showReadingScreen() {
+    document.getElementById("workspace").classList.add("hidden");
+    document.getElementById("reading-screen").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function showCards() {
+    document.getElementById("reading-screen").classList.add("hidden");
+    document.getElementById("workspace").classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function restartAll() {
+    document.getElementById("workspace").classList.add("hidden");
+    document.getElementById("reading-screen").classList.add("hidden");
+    document.getElementById("question-screen").classList.add("hidden");
+    document.getElementById("selection-screen").classList.remove("hidden");
+    deselectAll();
+    document.querySelector(".prompt-output-container").classList.add("hidden");
+    document.getElementById("prompt-output").value = "";
+    document.getElementById("user-context").value = "";
+    document.getElementById("pre-user-context").value = "";
+    resetOracle();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // --- Render seguro de Markdown básico (escapa HTML para evitar XSS) ---
+
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function renderInline(text) {
+    return escapeHtml(text)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*(?!\s)(.+?)\*/g, "$1<em>$2</em>");
+  }
+
+  function renderMarkdown(md) {
+    const lines = md.replace(/\r\n/g, "\n").split("\n");
+    let html = "";
+    let listOpen = false;
+
+    const closeList = () => {
+      if (listOpen) {
+        html += "</ul>";
+        listOpen = false;
+      }
+    };
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        closeList();
+        return;
+      }
+
+      const heading = trimmed.match(/^(#{1,4})\s+(.*)$/);
+      if (heading) {
+        closeList();
+        const level = heading[1].length;
+        html += `<h${level}>${renderInline(heading[2])}</h${level}>`;
+        return;
+      }
+
+      const bullet = trimmed.match(/^[-*•]\s+(.*)$/);
+      if (bullet) {
+        if (!listOpen) {
+          html += "<ul>";
+          listOpen = true;
+        }
+        html += `<li>${renderInline(bullet[1])}</li>`;
+        return;
+      }
+
+      closeList();
+      html += `<p>${renderInline(trimmed)}</p>`;
+    });
+
+    closeList();
+    return html;
+  }
+
 
   // --- Modal ---
   const modal = document.getElementById("card-modal");

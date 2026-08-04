@@ -82,18 +82,10 @@
 
             <section class="prompt-section">
                 <div class="prompt-header">
-                    <h2>Generador de Prompt</h2>
+                    <h2>Selección de Cartas</h2>
                     <div class="prompt-actions">
                         <button id="btn-random" class="btn-action">✨ Selección de Cartas Aleatoria</button>
-                        <button id="btn-generate" class="btn-primary hidden">Generar Prompt</button>
-                    </div>
-                </div>
-                <div class="prompt-inputs">
-                    <textarea id="user-context" placeholder="Contexto de la consulta (opcional)..."></textarea>
-                    <div class="prompt-output-container hidden">
-                        <textarea id="prompt-output" readonly
-                            placeholder="El prompt generado aparecerá aquí..."></textarea>
-                        <button id="btn-copy" class="btn-secondary">Copiar</button>
+                        <button id="btn-generate" class="btn-primary hidden">📜 Generar Lectura</button>
                     </div>
                 </div>
             </section>
@@ -120,6 +112,64 @@
                     </p>
                 </div>
             </section>
+        </div>
+
+        <!-- Pantalla 3: Generador de Lectura -->
+        <div id="reading-screen" class="selection-overlay overlay-scroll hidden">
+            <div class="selection-content reading-content">
+                <h2>📜 Generador de Lectura</h2>
+                <p class="selection-subtitle">Tu tirada está lista. Genera la lectura y, si quieres, consúltala con el oráculo.</p>
+
+                <section class="api-config">
+                    <button id="btn-api-toggle" class="btn-action" type="button">🔑 Configurar API</button>
+                    <div id="api-panel" class="api-panel is-hidden">
+                        <label for="api-key-input">API Key de llm7.io</label>
+                        <div class="api-row">
+                            <input type="password" id="api-key-input" placeholder="Pega aquí tu API key..."
+                                autocomplete="off" spellcheck="false">
+                            <button id="btn-save-key" class="btn-primary" type="button">Guardar</button>
+                        </div>
+                        <div class="api-row">
+                            <label for="model-select">Modelo</label>
+                            <select id="model-select"></select>
+                        </div>
+                        <span id="api-status" class="api-status"></span>
+                        <p class="api-note">
+                            <small>Tu clave se guarda solo en este navegador (localStorage) y se envía directamente a
+                                llm7.io. No se almacena en el sitio ni en el repositorio.</small>
+                        </p>
+                    </div>
+                </section>
+
+                <div class="prompt-inputs">
+                    <textarea id="user-context" placeholder="Contexto de la consulta (opcional)..."></textarea>
+                    <div class="reading-actions">
+                        <button id="btn-generate-again" class="btn-primary">📜 Generar Lectura</button>
+                        <button id="btn-consult" class="btn-primary hidden">🔮 Consultar al Oráculo</button>
+                    </div>
+                    <div class="prompt-output-container hidden">
+                        <textarea id="prompt-output" readonly
+                            placeholder="La lectura generada aparecerá aquí..."></textarea>
+                        <button id="btn-copy" class="btn-secondary">Copiar</button>
+                    </div>
+                </div>
+
+                <section id="oracle-section" class="oracle-section is-hidden">
+                    <div class="oracle-header">
+                        <h2>🔮 Interpretación del Oráculo</h2>
+                        <button id="btn-copy-reading" class="btn-secondary">Copiar</button>
+                    </div>
+                    <div id="oracle-loading" class="oracle-loading is-hidden">
+                        <span class="spinner"></span> Consultando al oráculo...
+                    </div>
+                    <div id="oracle-output" class="oracle-output"></div>
+                </section>
+
+                <div class="reading-nav">
+                    <button id="btn-back-cards" class="btn-action">← Volver a las cartas</button>
+                    <button id="btn-restart-reading" class="btn-primary">✨ Nueva Tirada</button>
+                </div>
+            </div>
         </div>
     </div>
 
