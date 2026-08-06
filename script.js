@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedCards = []; // Array of card objects {cardData, isReversed, element}
   let deck = [...TAROT_DATA]; // Copy of data
   let lastReadingMessages = null; // { system, user } de la última tirada generada
+  let followUpHistory = []; // Historial conversacional para preguntas de seguimiento
 
   // --- LLM (llm7.io) config ---
   const LLM_API_URL = "https://api.llm7.io/v1/chat/completions";
@@ -28,37 +29,44 @@ Directrices de estilo:
 - Indica con claridad si la lectura resulta favorable, neutra o desfavorable para la pregunta.
 - Estructura tu respuesta en Markdown, con encabezados (##) para cada sección y listas cuando aporten claridad.`;
 
-  const READING_TASK = `Realiza una lectura de tarot detallada y completa usando EXCLUSIVAMENTE las cartas anteriores, respetando su orden, posición y orientación. Estructura tu respuesta en las siguientes secciones:
+  const READING_TASK = `Realiza una lectura de tarot detallada, profunda y completa usando EXCLUSIVAMENTE las cartas anteriores, respetando su orden, posición y orientación. Estructura tu respuesta en las siguientes secciones:
 
-## 1. Análisis individual de cada carta
+## 1. ANÁLISIS CARTA POR CARTA
 Para cada carta, en orden:
-- Explica su significado tradicional según su orientación (derecha o invertida).
-- Interpreta qué aporta en su posición específica dentro de esta tirada.
-- Relaciónala con el contexto de la consulta y el área de la vida que representa.
-- Apóyate en la descripción visual proporcionada (símbolos, colores, figuras) para enriquecer el significado.
+- Explica su significado literal y simbólico según su orientación (derecha o invertida).
+- Indica su posición e influencia dentro del conjunto.
+- Relaciónala con el contexto de la consulta y el área de vida implicada.
 
-## 2. Conexiones y sinergia visual
-- Analiza cómo dialogan los símbolos visuales entre las cartas (colores, posturas, miradas, direcciones, elementos repetidos).
-- Identifica patrones, refuerzos o tensiones entre las imágenes.
-- Construye una narrativa visual coherente que hile toda la tirada.
+## 2. DIÁLOGO ENTRE LAS CARTAS
+- Describe las relaciones temáticas y narrativas entre las cartas.
+- Señala símbolos repetidos, complementarios o en contraste.
+- Explica la tensión o armonía entre elementos (fuego, agua, aire, tierra).
 
-## 3. Interpretación profunda y mensajes ocultos
-- Extrae el mensaje central del conjunto.
-- Revela lecciones, advertencias u oportunidades no evidentes.
-- Contextualiza la lectura en términos de pasado, presente y futuro según la tirada.
+## 3. NIVELES DE INTERPRETACIÓN
+- Nivel práctico: ¿Qué muestra en lo concreto y observable?
+- Nivel psicológico: ¿Qué revela sobre dinámicas internas, emociones o bloqueos?
+- Nivel espiritual/arquetípico: ¿Qué patrones mayores o lecciones de fondo activa?
 
-## 4. Consejos prácticos y camino a seguir
-- Ofrece orientación concreta y accionable.
-- Sugiere áreas de enfoque o cambios recomendados.
-- Propón cómo superar los obstáculos identificados.
+## 4. CONEXIONES OCULTAS
+- Incluye numerología relevante de las cartas seleccionadas.
+- Añade correspondencias astrológicas o alquímicas cuando aporten claridad.
+- Señala posibles referencias históricas, míticas o tradicionales pertinentes.
 
-## 5. Conclusión y mantra de poder
-- Resume la esencia de la lectura en unas frases integradoras.
-- Señala con claridad si la tirada es favorable o desfavorable para la consulta.
-- Crea un MANTRA o AFIRMACIÓN personalizada, en primera persona, que sintetice la energía de la tirada.
-- Cierra con una reflexión empoderadora.
+## 5. MENSAJE CENTRAL
+- Entrega la síntesis en frases poderosas y claras.
+- Expresa lo que no se dice de forma literal pero se intuye en la tirada.
+- Indica con claridad si la lectura es favorable, neutra o desfavorable para la consulta.
 
-Antes de finalizar, presenta un breve resumen claro de la lectura realizada.`;
+## 6. CAMINO RECOMENDADO
+- Propón una acción práctica inmediata y realista.
+- Sugiere un trabajo interno (actitud, hábito, reflexión o enfoque emocional).
+- Indica señales concretas a observar en el entorno para validar el proceso.
+
+## 7. PREGUNTAS PARA PROFUNDIZAR
+- Formula preguntas reflexivas para el consultante.
+- Incluye un ángulo no obvio que merezca exploración adicional.
+
+Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personalizada, en primera persona, coherente con toda la lectura.`;
 
   // --- DOM Elements ---
   const gridEl = document.getElementById("grid");
@@ -148,6 +156,9 @@ Antes de finalizar, presenta un breve resumen claro de la lectura realizada.`;
     document
       .getElementById("btn-copy-reading")
       .addEventListener("click", copyReading);
+    document
+      .getElementById("btn-followup")
+      .addEventListener("click", askFollowUp);
   }
 
   // --- Core Logic ---
@@ -580,12 +591,86 @@ Antes de finalizar, presenta un breve resumen claro de la lectura realizada.`;
 
       outputEl.dataset.raw = content;
       outputEl.innerHTML = renderMarkdown(content);
+      initFollowUpHistory(content);
+      const followUpSection = document.getElementById("followup-section");
+      followUpSection.classList.remove("is-hidden");
     } catch (err) {
       outputEl.dataset.raw = "";
       outputEl.innerHTML = `<p class="oracle-error">⚠️ ${escapeHtml(err.message)}</p>`;
+      clearFollowUpState();
     } finally {
       loading.classList.add("is-hidden");
       consultBtn.disabled = false;
+    }
+  }
+
+  async function askFollowUp() {
+    if (!lastReadingMessages || followUpHistory.length === 0) {
+      alert("Primero genera y consulta la lectura principal.");
+      return;
+    }
+
+    const questionInput = document.getElementById("followup-input");
+    const question = questionInput.value.trim();
+    if (!question) {
+      alert("Escribe una pregunta de seguimiento antes de enviar.");
+      questionInput.focus();
+      return;
+    }
+
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      setApiStatus("Introduce y guarda tu API key primero.", "warn");
+      document.getElementById("api-panel").classList.remove("is-hidden");
+      document.getElementById("api-key-input").focus();
+      return;
+    }
+
+    const model = document.getElementById("model-select").value;
+    const followUpLoading = document.getElementById("followup-loading");
+    const followUpBtn = document.getElementById("btn-followup");
+    const userMessage = {
+      role: "user",
+      content: `Pregunta de seguimiento del consultante: ${question}`,
+    };
+
+    followUpHistory.push(userMessage);
+    followUpLoading.classList.remove("is-hidden");
+    followUpBtn.disabled = true;
+
+    try {
+      const response = await fetch(LLM_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: followUpHistory,
+          temperature: 0.8,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await describeHttpError(response));
+      }
+
+      const data = await response.json();
+      const answer = data?.choices?.[0]?.message?.content?.trim();
+      if (!answer) {
+        throw new Error("El modelo no devolvió respuesta a la pregunta de seguimiento.");
+      }
+
+      followUpHistory.push({ role: "assistant", content: answer });
+      appendFollowUpExchange(question, answer);
+      questionInput.value = "";
+    } catch (err) {
+      followUpHistory.pop();
+      appendFollowUpError(question, err.message);
+    } finally {
+      followUpLoading.classList.add("is-hidden");
+      followUpBtn.disabled = false;
     }
   }
 
@@ -612,6 +697,60 @@ Antes de finalizar, presenta un breve resumen claro de la lectura realizada.`;
     outputEl.innerHTML = "";
     outputEl.dataset.raw = "";
     document.getElementById("btn-consult").classList.add("hidden");
+    clearFollowUpState();
+  }
+
+  function initFollowUpHistory(oracleReadingText) {
+    const followUpSystemPrompt = `${TAROT_SYSTEM_PROMPT}\n\nResponde preguntas de seguimiento sobre una lectura ya entregada. Mantén coherencia estricta con las cartas, su orientación y la lectura previa. Si algo no puede afirmarse con base en la tirada, dilo explícitamente.`;
+    followUpHistory = [
+      { role: "system", content: followUpSystemPrompt },
+      { role: "user", content: lastReadingMessages.user },
+      { role: "assistant", content: oracleReadingText },
+    ];
+
+    const followUpOutput = document.getElementById("followup-output");
+    const followUpInput = document.getElementById("followup-input");
+    followUpOutput.innerHTML = "";
+    followUpInput.value = "";
+  }
+
+  function clearFollowUpState() {
+    followUpHistory = [];
+    const followUpSection = document.getElementById("followup-section");
+    const followUpOutput = document.getElementById("followup-output");
+    const followUpInput = document.getElementById("followup-input");
+    const followUpLoading = document.getElementById("followup-loading");
+    const followUpBtn = document.getElementById("btn-followup");
+
+    followUpSection.classList.add("is-hidden");
+    followUpOutput.innerHTML = "";
+    followUpInput.value = "";
+    followUpLoading.classList.add("is-hidden");
+    followUpBtn.disabled = false;
+  }
+
+  function appendFollowUpExchange(question, answer) {
+    const followUpOutput = document.getElementById("followup-output");
+    const item = document.createElement("div");
+    item.className = "followup-item";
+    item.innerHTML = `
+      <div class="followup-question"><strong>Tu pregunta:</strong> ${escapeHtml(question)}</div>
+      <div class="followup-answer">${renderMarkdown(answer)}</div>
+    `;
+    followUpOutput.appendChild(item);
+    followUpOutput.scrollTop = followUpOutput.scrollHeight;
+  }
+
+  function appendFollowUpError(question, message) {
+    const followUpOutput = document.getElementById("followup-output");
+    const item = document.createElement("div");
+    item.className = "followup-item";
+    item.innerHTML = `
+      <div class="followup-question"><strong>Tu pregunta:</strong> ${escapeHtml(question)}</div>
+      <div class="followup-answer oracle-error">⚠️ ${escapeHtml(message)}</div>
+    `;
+    followUpOutput.appendChild(item);
+    followUpOutput.scrollTop = followUpOutput.scrollHeight;
   }
 
   function showReadingScreen() {

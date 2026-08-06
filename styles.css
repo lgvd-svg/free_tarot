@@ -856,6 +856,49 @@ main {
     font-weight: 700;
 }
 
+.followup-hint {
+    margin: 0 0 14px;
+    color: var(--text-muted);
+}
+
+.followup-inputs textarea {
+    width: 100%;
+    min-height: 90px;
+    margin-bottom: 10px;
+    resize: vertical;
+    background: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: var(--font-body);
+}
+
+.followup-output {
+    margin-top: 14px;
+    display: grid;
+    gap: 12px;
+}
+
+.followup-item {
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.followup-question {
+    margin-bottom: 8px;
+    color: var(--gold);
+}
+
+.followup-answer p:first-child,
+.followup-answer h2:first-child,
+.followup-answer h3:first-child,
+.followup-answer h4:first-child {
+    margin-top: 0;
+}
+
 /* --- Pantalla 3: Generador de Lectura --- */
 .selection-overlay.overlay-scroll {
     align-items: flex-start;
