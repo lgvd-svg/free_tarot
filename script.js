@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // --- State ---
-  let currentMode = 10; // Default to 10 cards
+  let currentMode = "10-celtic"; // Tirada por defecto
+  let currentModeDesc = ""; // Texto de mode-desc seleccionado en UI
   let selectedCards = []; // Array of card objects {cardData, isReversed, element}
   let deck = [...TAROT_DATA]; // Copy of data
   let lastReadingMessages = null; // { system, user } de la última tirada generada
@@ -68,6 +69,84 @@ Para cada carta, en orden:
 
 Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personalizada, en primera persona, coherente con toda la lectura.`;
 
+  const SPREAD_MODES = {
+    "1-day": {
+      cardCount: 1,
+      label: "1 carta",
+      description: "lectura del día",
+      positions: ["Carta del día / Situación actual"],
+    },
+    "3-ppf": {
+      cardCount: 3,
+      label: "3 cartas",
+      description: "pasado, presente y futuro",
+      positions: ["Pasado", "Presente", "Futuro"],
+    },
+    "10-celtic": {
+      cardCount: 10,
+      label: "10 cartas",
+      description: "cruz celta",
+      positions: [
+        "Situación presente",
+        "El Desafío (cruzada)",
+        "El Pasado / Base",
+        "El Pasado Reciente",
+        "El potencial consiente / Metas",
+        "El Futuro Inmediato",
+        "Factores Internos / Actitud del consultante",
+        "Factores Externos / Influencias ambientales",
+        "Esperanzas y Temores",
+        "Resultado Final / Desenlace",
+      ],
+    },
+    "13-astro": {
+      cardCount: 13,
+      label: "13 cartas",
+      description: "rueda astrológica",
+      positions: [
+        "Casa 1 (Identidad / Personalidad)",
+        "Casa 2 (Recursos / Valores)",
+        "Casa 3 (Comunicación / Entorno cercano)",
+        "Casa 4 (Hogar / Raíces)",
+        "Casa 5 (Creatividad / Placer)",
+        "Casa 6 (Salud / Trabajo diario)",
+        "Casa 7 (Relaciones / Asociaciones)",
+        "Casa 8 (Transformación / Bienes compartidos)",
+        "Casa 9 (Filosofía / Viajes / Expansión)",
+        "Casa 10 (Carrera / Proyección social)",
+        "Casa 11 (Amigos / Proyectos grupales)",
+        "Casa 12 (Inconsciente / Karma)",
+        "Centro (Tema Central / Síntesis)",
+      ],
+    },
+    "13-mystic": {
+      cardCount: 13,
+      label: "13 cartas",
+      description: "cruz mística",
+      positions: [
+        "Vertical (Situación actual) - Carta 1 (Arriba): Aspectos superiores o ideales",
+        "Vertical (Situación actual) - Carta 2: Influencias internas o personales",
+        "Vertical (Situación actual) - Carta 3: Base o fundamento de la situación",
+        "Vertical (Situación actual) - Carta 4 (Centro): Factor central de la consulta",
+        "Vertical (Situación actual) - Carta 5 (Abajo): Resultado inmediato o consecuencia directa",
+        "Vertical (Situación actual) - Carta 6: Influencia del entorno cercano o apoyo",
+        "Vertical (Situación actual) - Carta 7: Aspectos ocultos o subconscientes",
+        "Horizontal (Influencias externas) - Carta 8 (Izquierda): Influencia externa positiva",
+        "Horizontal (Influencias externas) - Carta 9: Influencia externa negativa u obstáculo",
+        "Horizontal (Influencias externas) - Carta 10 (Derecha): Resultado final externo",
+        "Horizontal (Influencias externas) - Carta 11: Matiz adicional y desarrollo temporal",
+        "Horizontal (Influencias externas) - Carta 12: Matiz adicional y desarrollo temporal",
+        "Horizontal (Influencias externas) - Carta 13: Matiz adicional y desarrollo temporal",
+      ],
+      guidance:
+        "Incluye interpretación del significador: si aparece en la hilera vertical, el consultante está más a merced de los acontecimientos; si aparece en la horizontal, muestra mayor control de la situación.",
+    },
+  };
+
+  function getCurrentSpread() {
+    return SPREAD_MODES[currentMode] || SPREAD_MODES["10-celtic"];
+  }
+
   // --- DOM Elements ---
   const gridEl = document.getElementById("grid");
   const btnShuffle = document.getElementById("btn-shuffle");
@@ -90,7 +169,9 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
     const modeLargeButtons = document.querySelectorAll(".btn-mode-large");
     modeLargeButtons.forEach((btn) => {
       btn.addEventListener("click", (e) => {
-        startReading(parseInt(e.currentTarget.dataset.mode));
+        const modeDescEl = e.currentTarget.querySelector(".mode-desc");
+        const modeDesc = modeDescEl ? modeDescEl.textContent.trim() : "";
+        startReading(e.currentTarget.dataset.mode, modeDesc);
       });
     });
 
@@ -168,7 +249,7 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
     deselectAll();
 
     const allCards = Array.from(document.getElementById("grid").children);
-    const needed = currentMode;
+    const needed = getCurrentSpread().cardCount;
 
     // Barajar índices y tomar los primeros 'needed' como selección única
     const indices = fisherYatesShuffle(
@@ -188,8 +269,10 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
     });
   }
 
-  function startReading(mode) {
+  function startReading(mode, modeDesc = "") {
+    if (!SPREAD_MODES[mode]) return;
     currentMode = mode;
+    currentModeDesc = modeDesc;
     deselectAll();
     updateStatus();
 
@@ -199,13 +282,14 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
   }
 
   function updateStatus() {
-    cardCountEl.textContent = `Seleccionadas: ${selectedCards.length} / ${currentMode}`;
+    const needed = getCurrentSpread().cardCount;
+    cardCountEl.textContent = `Seleccionadas: ${selectedCards.length} / ${needed}`;
 
     // Show/Hide generate button based on completion
     const btnGenerate = document.getElementById("btn-generate");
     const outputContainer = document.querySelector(".prompt-output-container");
 
-    if (selectedCards.length === currentMode) {
+    if (selectedCards.length === needed) {
       btnGenerate.classList.remove("hidden");
     } else {
       btnGenerate.classList.add("hidden");
@@ -335,8 +419,9 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
       );
     } else {
       // Check limit
-      if (selectedCards.length >= currentMode) {
-        alert(`Máximo ${currentMode} cartas permitidas en este modo.`);
+      const needed = getCurrentSpread().cardCount;
+      if (selectedCards.length >= needed) {
+        alert(`Máximo ${needed} cartas permitidas en este modo.`);
         return;
       }
       // Select
@@ -371,53 +456,22 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
   }
 
   function buildReadingMessages(context) {
-    const modeDescriptions = {
-      1: "lectura del día",
-      3: "pasado, presente y futuro",
-      10: "cruz celta",
-      13: "rueda astrológica",
-    };
-    const description = modeDescriptions[currentMode] || "";
-
-    // Definiciones de posiciones para cada tirada
-    const spreadPositions = {
-      1: ["Carta del día / Situación actual"],
-      3: ["Pasado", "Presente", "Futuro"],
-      10: [
-        "Situación presente",
-        "El Desafío (cruzada)",
-        "El Pasado / Base",
-        "El Pasado Reciente",
-        "El potencial consiente / Metas",
-        "El Futuro Inmediato",
-        "Factores Internos / Actitud del consultante",
-        "Factores Externos / Influencias ambientales",
-        "Esperanzas y Temores",
-        "Resultado Final / Desenlace",
-      ],
-      13: [
-        "Casa 1 (Identidad / Personalidad)",
-        "Casa 2 (Recursos / Valores)",
-        "Casa 3 (Comunicación / Entorno cercano)",
-        "Casa 4 (Hogar / Raíces)",
-        "Casa 5 (Creatividad / Placer)",
-        "Casa 6 (Salud / Trabajo diario)",
-        "Casa 7 (Relaciones / Asociaciones)",
-        "Casa 8 (Transformación / Bienes compartidos)",
-        "Casa 9 (Filosofía / Viajes / Expansión)",
-        "Casa 10 (Carrera / Proyección social)",
-        "Casa 11 (Amigos / Proyectos grupales)",
-        "Casa 12 (Inconsciente / Karma)",
-        "Centro (Tema Central / Síntesis)",
-      ],
-    };
-    const currentPositions = spreadPositions[currentMode] || [];
+    const spread = getCurrentSpread();
+    const description = currentModeDesc || spread.description || "";
+    const currentPositions = spread.positions || [];
 
     let user = `CONSULTA DE TAROT\n\n`;
-    user += `Tipo de lectura: ${currentMode} cartas${description ? ` (${description})` : ""}\n`;
+    user += `Tipo de lectura: ${spread.label}${description ? ` (${description})` : ""}\n`;
+    if (currentModeDesc) {
+      user += `Descripción de la tirada (mode-desc UI): ${currentModeDesc}\n`;
+    }
     user += context.trim()
       ? `Contexto de la consulta: ${context.trim()}\n`
       : `Contexto de la consulta: Sin contexto específico.\n`;
+
+    if (spread.guidance) {
+      user += `Indicaciones de esta tirada: ${spread.guidance}\n`;
+    }
 
     user += `\nCartas seleccionadas en el orden de la lectura:\n`;
 
