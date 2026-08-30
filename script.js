@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- LLM (llm7.io) config ---
   const LLM_API_URL = "https://api.llm7.io/v1/chat/completions";
   const LLM_KEY_STORAGE = "llm7_api_key";
-  // Modelos gratuitos (usage_based_only:false) en llm7.io al 2026-08-04
+  // Modelos gratuitos (usage_based_only:false, tier "turbo") en llm7.io al 2026-08-30
+  // Ver: https://api.llm7.io/v1/models
   const FREE_MODELS = [
-    "gpt-oss:20b",
-    "deepseek-v4-flash:0731",
-    "codestral-latest",
-    "minimax-2.7",
+    "gpt-oss",
+    "minimax-m2.7",
+    "meta-Llama-3.1-8B-Instruct-Turbo",
     "mistral-Nemo-Instruct-2407",
-    "gemini-3.1-flash-lite",
+    "codestral-latest",
   ];
 
   const TAROT_SYSTEM_PROMPT = `Eres un tarotista de renombre, experto en interpretación simbólica, hermetismo y en la baraja Rider-Waite-Smith. Combinas precisión técnica con un lenguaje claro, cálido y empático.
