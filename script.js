@@ -10,12 +10,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- LLM (llm7.io) config ---
   const LLM_API_URL = "https://api.llm7.io/v1/chat/completions";
   const LLM_KEY_STORAGE = "llm7_api_key";
-  // Modelos gratuitos (usage_based_only:false, tier "turbo") en llm7.io al 2026-08-30
+  // Modelos gratuitos (usage_based_only:false, tier "turbo") en llm7.io al 2026-09-18
   // Ver: https://api.llm7.io/v1/models
   const FREE_MODELS = [
-    "gpt-oss",
+    "GLM-5.3-Flash",
     "minimax-m2.7",
-    "meta-Llama-3.1-8B-Instruct-Turbo",
     "mistral-Nemo-Instruct-2407",
     "codestral-latest",
   ];
@@ -207,13 +206,12 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
     });
 
     // Prompt Logic
-    document.getElementById("btn-generate").addEventListener("click", () => {
-      generatePrompt();
-      showReadingScreen();
-    });
     document
-      .getElementById("btn-generate-again")
-      .addEventListener("click", generatePrompt);
+      .getElementById("btn-generate")
+      .addEventListener("click", () => {
+        generatePrompt();
+        showReadingScreen();
+      });
     document.getElementById("btn-copy").addEventListener("click", copyPrompt);
 
     // Random Selection
