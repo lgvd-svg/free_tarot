@@ -235,9 +235,6 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
       .getElementById("btn-consult")
       .addEventListener("click", consultOracle);
     document
-      .getElementById("btn-copy-reading")
-      .addEventListener("click", copyReading);
-    document
       .getElementById("btn-followup")
       .addEventListener("click", askFollowUp);
   }
@@ -293,9 +290,11 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
       btnGenerate.classList.remove("hidden");
     } else {
       btnGenerate.classList.add("hidden");
-      outputContainer.classList.add("hidden");
+      outputContainer.classList.add("is-hidden");
       const btnConsult = document.getElementById("btn-consult");
       if (btnConsult) btnConsult.classList.add("hidden");
+      const btnCopy = document.getElementById("btn-copy");
+      if (btnCopy) btnCopy.classList.add("hidden");
     }
   }
 
@@ -449,10 +448,11 @@ Cierra con una breve conclusión integradora y un MANTRA o AFIRMACIÓN personali
     output.value =
       `[INSTRUCCIONES DEL SISTEMA]\n${lastReadingMessages.system}\n\n` +
       `[MENSAJE DEL USUARIO]\n${lastReadingMessages.user}`;
-    outputContainer.classList.remove("hidden");
 
     const consultBtn = document.getElementById("btn-consult");
     if (consultBtn) consultBtn.classList.remove("hidden");
+    const copyBtn = document.getElementById("btn-copy");
+    if (copyBtn) copyBtn.classList.remove("hidden");
   }
 
   function buildReadingMessages(context) {

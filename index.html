@@ -146,22 +146,21 @@
                 </section>
 
                 <div class="prompt-inputs">
-                    <textarea id="user-context" placeholder="Contexto de la consulta (opcional)..."></textarea>
+                    <textarea id="user-context" class="is-hidden" placeholder="Contexto de la consulta (opcional)..."></textarea>
                     <div class="reading-actions">
                         <button id="btn-generate-again" class="btn-primary">📜 Generar Lectura</button>
                         <button id="btn-consult" class="btn-primary hidden">🔮 Consultar al Oráculo</button>
+                        <button id="btn-copy" class="btn-secondary hidden">Copiar lectura</button>
                     </div>
-                    <div class="prompt-output-container hidden">
+                    <div class="prompt-output-container is-hidden">
                         <textarea id="prompt-output" readonly
                             placeholder="La lectura generada aparecerá aquí..."></textarea>
-                        <button id="btn-copy" class="btn-secondary">Copiar</button>
                     </div>
                 </div>
 
                 <section id="oracle-section" class="oracle-section is-hidden">
                     <div class="oracle-header">
                         <h2>🔮 Interpretación del Oráculo</h2>
-                        <button id="btn-copy-reading" class="btn-secondary">Copiar</button>
                     </div>
                     <div id="oracle-loading" class="oracle-loading is-hidden">
                         <span class="spinner"></span> Consultando al oráculo...
