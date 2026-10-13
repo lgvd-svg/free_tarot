@@ -27,6 +27,8 @@ Directrices de estilo:
 - Sé empático pero objetivo, equilibrando realismo y esperanza.
 - Reconoce tanto las fortalezas como los desafíos; evita predicciones absolutas salvo que la tirada sea muy evidente.
 - Indica con claridad si la lectura resulta favorable, neutra o desfavorable para la pregunta.
+- Responde de forma directa y explícita la pregunta formulada por el consultante.
+- Además, detecta si las cartas apuntan a una pregunta implícita u oculta (algo que el consultante no preguntó pero que la tirada pone sobre la mesa) o a un mensaje propio; formúlala con claridad y respóndela también, para que el lector sepa qué se esconde detrás de su consulta.
 - Estructura tu respuesta en Markdown, con encabezados (##) para cada sección y listas cuando aporten claridad.`;
 
   const READING_TASK = `Realiza una lectura de tarot detallada, profunda y completa usando EXCLUSIVAMENTE las cartas anteriores, respetando su orden, posición y orientación. Estructura tu respuesta en las siguientes secciones:
@@ -52,17 +54,25 @@ Para cada carta, en orden:
 - Añade correspondencias astrológicas o alquímicas cuando aporten claridad.
 - Señala posibles referencias históricas, míticas o tradicionales pertinentes.
 
-## 5. MENSAJE CENTRAL
-- Entrega la síntesis en frases poderosas y claras.
-- Expresa lo que no se dice de forma literal pero se intuye en la tirada.
+## 5. RESPUESTA A TU CONSULTA
+- Responde de forma directa y explícita la pregunta o situación planteada por el consultante, antes de cualquier otra síntesis.
 - Indica con claridad si la lectura es favorable, neutra o desfavorable para la consulta.
 
-## 6. CAMINO RECOMENDADO
+## 6. LA PREGUNTA ESCONDIDA
+- Identifica si las cartas revelan una pregunta implícita, una preocupación de fondo o un mensaje que el consultante no formuló pero que la tirada pone en primer plano.
+- Enuncia esa pregunta oculta de forma explícita ("Tal vez la pregunta que hay detrás es: ...") y respóndela con base en las cartas.
+- Si las cartas no señalan ninguna pregunta oculta evidente, dilo brevemente en lugar de inventarla.
+
+## 7. MENSAJE CENTRAL
+- Entrega la síntesis en frases poderosas y claras, integrando la respuesta explícita y la pregunta escondida.
+- Expresa lo que no se dice de forma literal pero se intuye en la tirada.
+
+## 8. CAMINO RECOMENDADO
 - Propón una acción práctica inmediata y realista.
 - Sugiere un trabajo interno (actitud, hábito, reflexión o enfoque emocional).
 - Indica señales concretas a observar en el entorno para validar el proceso.
 
-## 7. PREGUNTAS PARA PROFUNDIZAR
+## 9. PREGUNTAS PARA PROFUNDIZAR
 - Formula preguntas reflexivas para el consultante.
 - Incluye un ángulo no obvio que merezca exploración adicional.
 
